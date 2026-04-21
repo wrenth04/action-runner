@@ -4,7 +4,8 @@
 
 ## 內容
 
-- `Dockerfile`: 建立 runner 映像
+- `Dockerfile`: 建立 amd64 runner 映像
+- `Dockerfile.arm64`: 建立 arm64 runner 映像
 - `entrypoint.sh`: 容器啟動時自動註冊並執行 runner
 - `docker-compose.yml`: 使用 Docker Compose 啟動 runner
 - `.dockerignore`: 排除不需要加入 build context 的檔案
@@ -88,6 +89,78 @@ docker run -d \
   -e RUNNER_GROUP="Default" \
   -e RUNNER_WORKDIR="_work" \
   my-github-runner
+```
+
+## Docker Hub 發佈 workflow
+
+專案已包含 GitHub Actions workflow：`.github/workflows/docker-publish.yml`
+
+### 觸發條件
+
+- 推送 git tag `v*` 時自動 build 並 push 到 Docker Hub
+- 可從 GitHub Actions 頁面手動執行 `workflow_dispatch`
+
+### 需要設定的 GitHub Secrets
+
+請在 GitHub repository secrets 設定：
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+
+建議 `DOCKERHUB_TOKEN` 使用 Docker Hub access token，不要直接使用帳號密碼。
+
+### 需要修改的 image 名稱
+
+workflow 內目前設定為：
+
+```yaml
+env:
+  IMAGE_NAME: wrenth04/action-runner
+```
+
+如果你之後要改成其他 Docker Hub image 名稱，可直接修改這個值，例如：
+
+```yaml
+env:
+  IMAGE_NAME: your-dockerhub-user/github-runner
+```
+
+### 發佈的 tags
+
+workflow 會先分別使用：
+
+- `Dockerfile` 建立 `linux/amd64`
+- `Dockerfile.arm64` 建立 `linux/arm64`
+
+接著合併成同一組 multi-arch tags。
+
+當你推送例如 `v1.2.3` 時，workflow 會發佈：
+
+- `1.2.3`
+- `1.2`
+- `1`
+- `sha-<commit>`
+
+手動觸發時會發佈：
+
+- `sha-<commit>`
+- `manual-<commit>`
+
+### 驗證方式
+
+1. 在 GitHub 建立並推送 tag，例如：
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+2. 到 GitHub Actions 確認 workflow 成功
+3. 到 Docker Hub 檢查對應 tags 是否已建立
+4. 拉取映像驗證：
+
+```bash
+docker pull your-dockerhub-user/github-runner:0.1.0
 ```
 
 ## 注意事項

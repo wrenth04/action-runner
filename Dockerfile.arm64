@@ -1,0 +1,35 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV RUNNER_VERSION=2.333.1
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    ca-certificates \
+    tar \
+    git \
+    gh \
+    jq \
+    libicu70 \
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m -s /bin/bash runner && \
+    usermod -aG sudo runner && \
+    echo "runner ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    mkdir -p /actions-runner && \
+    chown -R runner:runner /actions-runner
+
+WORKDIR /actions-runner
+
+RUN curl -fsSL -o actions-runner-linux-arm64-${RUNNER_VERSION}.tar.gz \
+    https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-arm64-${RUNNER_VERSION}.tar.gz && \
+    tar xzf actions-runner-linux-arm64-${RUNNER_VERSION}.tar.gz && \
+    rm actions-runner-linux-arm64-${RUNNER_VERSION}.tar.gz
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh && chown runner:runner /entrypoint.sh
+
+USER runner
+
+ENTRYPOINT ["/entrypoint.sh"]
