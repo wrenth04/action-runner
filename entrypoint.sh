@@ -16,13 +16,8 @@ RUNNER_WORKDIR="${RUNNER_WORKDIR:-_work}"
 RUNNER_LABELS="${RUNNER_LABELS:-docker}"
 RUNNER_GROUP="${RUNNER_GROUP:-Default}"
 
-cleanup() {
-  echo "Removing runner..."
-  ./config.sh remove --unattended --token "$RUNNER_TOKEN" || true
-}
-
-trap 'cleanup; exit 130' INT
-trap 'cleanup; exit 143' TERM
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 if [ ! -f .runner ]; then
   echo "Configuring runner..."

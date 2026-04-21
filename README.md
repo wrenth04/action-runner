@@ -168,8 +168,8 @@ docker pull your-dockerhub-user/github-runner:0.1.0
 - `RUNNER_TOKEN` 具有時效性，過期後需要重新產生
 - 建議不要把真實 token 直接提交到版本控制
 - 目前 `docker-compose.yml` 內是明文設定，若要更安全可改成使用 `.env`
-- 容器停止時會嘗試執行 `./config.sh remove`
-- 若 runner 異常中止，GitHub 端可能仍殘留 runner 紀錄，需要手動移除
+- 容器重新啟動時會沿用既有 runner 設定，不會自動執行 `./config.sh remove`
+- 若你刪除容器或不再使用該 runner，需在 GitHub 端手動移除殘留 runner 紀錄
 
 ## 建議改進
 
